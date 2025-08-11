@@ -37,10 +37,13 @@
 <body>
     <h1>Dynamic Quote Generator</h1>
 
-    <!-- Category Selector -->
+    <!-- Category Filter -->
     <div>
-        <label for="categorySelect">Select Category: </label>
-        <select id="categorySelect"></select>
+        <label for="categoryFilter">Filter by Category: </label>
+        <select id="categoryFilter" onchange="filterQuotes()">
+            <option value="all">All Categories</option>
+            <!-- Dynamically populated categories -->
+        </select>
     </div>
 
     <!-- Quote Display -->
@@ -65,4 +68,5 @@
     <script src="script.js"></script>
 </body>
 </html>
+
 
