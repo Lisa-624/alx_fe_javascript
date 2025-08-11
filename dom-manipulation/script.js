@@ -15,6 +15,7 @@ const syncStatus = document.getElementById("syncStatus");
 const syncMessage = document.getElementById("syncMessage");
 const acceptServerBtn = document.getElementById("acceptServerBtn");
 const keepLocalBtn = document.getElementById("keepLocalBtn");
+const syncQuotesBtn = document.getElementById("syncQuotesBtn");
 
 /* --- Data Model Helpers --- */
 function makeQuote(text, category) {
@@ -28,7 +29,6 @@ function makeQuote(text, category) {
 
 /* --- Quotes state --- */
 let quotes = [];
-let serverQuotes = [];
 let conflictQuotes = [];
 
 /* --- Local Storage Helpers --- */
@@ -112,6 +112,9 @@ function addQuote() {
   newQuoteText.value = "";
   newQuoteCategory.value = "";
   alert("Quote added successfully!");
+
+  // Optionally post new quote to server asynchronously
+  postQuoteToServer(newQuote);
 }
 
 /* --- Import / Export --- */
@@ -201,37 +204,39 @@ function mergeQuotes(localQuotes, serverQuotes) {
   const merged = [...localQuotes];
   const serverMap = new Map(serverQuotes.map(q => [q.id, q]));
 
-  // For every server quote:
   serverQuotes.forEach(serverQ => {
-    const localQ = merged.find(q => q.id === serverQ.id);
-    if (!localQ) {
-      // New server quote — add it
+    const localQIndex = merged.findIndex(q => q.id === serverQ.id);
+    if (localQIndex === -1) {
+      // New quote from server
       merged.push(serverQ);
-    } else if (serverQ.lastModified > localQ.lastModified) {
-      // Server quote is newer — replace local
-      const idx = merged.findIndex(q => q.id === localQ.id);
-      if (idx !== -1) merged[idx] = serverQ;
+    } else if (serverQ.lastModified > merged[localQIndex].lastModified) {
+      // Server quote is newer, replace local
+      merged[localQIndex] = serverQ;
     }
   });
 
   return merged;
 }
 
-// Periodic sync job
-async function periodicSync() {
-  const fetchedServerQuotes = await fetchQuotesFromServer();
-  if (fetchedServerQuotes.length === 0) return;
+// The main sync function (called manually or periodically)
+async function syncQuotes() {
+  const serverData = await fetchQuotesFromServer();
+  if (serverData.length === 0) {
+    alert("No data fetched from server.");
+    return;
+  }
 
-  // Detect conflicts (server wins)
-  const newMergedQuotes = mergeQuotes(quotes, fetchedServerQuotes);
+  const merged = mergeQuotes(quotes, serverData);
 
-  // Detect if there is a difference between current local quotes and new merged
-  const isConflict = JSON.stringify(quotes) !== JSON.stringify(newMergedQuotes);
-  if (isConflict) {
-    conflictQuotes = newMergedQuotes;
-    // Show UI notification to accept or keep local
+  const localStr = JSON.stringify(quotes);
+  const mergedStr = JSON.stringify(merged);
+
+  if (localStr !== mergedStr) {
+    conflictQuotes = merged;
     syncMessage.textContent = "Server has updated quotes. Accept server version or keep local?";
     syncStatus.style.display = "block";
+  } else {
+    alert("Quotes are already in sync with server.");
   }
 }
 
@@ -266,35 +271,32 @@ function init() {
       const q = JSON.parse(lastQuote);
       if (q && q.text) quoteDisplay.textContent = q.text;
     } catch {}
-
   }
 
   // Event listeners
   showQuoteBtn.addEventListener("click", showRandomQuote);
-  addQuoteBtn.addEventListener("click", () => {
-    addQuote();
-    // Optional: post new quote to server asynchronously (fire and forget)
-    postQuoteToServer(quotes[quotes.length -1]);
-  });
+  addQuoteBtn.addEventListener("click", addQuote);
   categoryFilter.addEventListener("change", filterQuotes);
   exportQuotesBtn.addEventListener("click", exportToJsonFile);
   importFileInput.addEventListener("change", importFromJsonFile);
   acceptServerBtn.addEventListener("click", acceptServerVersion);
   keepLocalBtn.addEventListener("click", keepLocalVersion);
+  syncQuotesBtn.addEventListener("click", syncQuotes);
 
   // Initial quote display
   showRandomQuote();
 
-  // Start periodic sync (if SERVER_URL set)
+  // Periodic sync every minute
   if (SERVER_URL && !SERVER_URL.includes("your-mock-api")) {
-    periodicSync(); // Initial sync immediately
-    setInterval(periodicSync, SYNC_INTERVAL_MS);
+    syncQuotes(); // initial sync
+    setInterval(syncQuotes, SYNC_INTERVAL_MS);
   } else {
     console.info("Server sync disabled. Set SERVER_URL in script.js to enable syncing.");
   }
 }
 
 init();
+
 
 
 
