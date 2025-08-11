@@ -6,6 +6,7 @@ const SYNC_INTERVAL_MS = 60000; // 60 seconds sync interval
 const quoteDisplay = document.getElementById("quoteDisplay");
 const categoryFilter = document.getElementById("categoryFilter");
 const showQuoteBtn = document.getElementById("showQuoteBtn");
+const syncQuotesBtn = document.getElementById("syncQuotesBtn");
 const newQuoteText = document.getElementById("newQuoteText");
 const newQuoteCategory = document.getElementById("newQuoteCategory");
 const addQuoteBtn = document.getElementById("addQuoteBtn");
@@ -15,7 +16,6 @@ const syncStatus = document.getElementById("syncStatus");
 const syncMessage = document.getElementById("syncMessage");
 const acceptServerBtn = document.getElementById("acceptServerBtn");
 const keepLocalBtn = document.getElementById("keepLocalBtn");
-const syncQuotesBtn = document.getElementById("syncQuotesBtn");
 
 /* --- Data Model Helpers --- */
 function makeQuote(text, category) {
@@ -41,7 +41,6 @@ function loadQuotes() {
   if (stored) {
     quotes = JSON.parse(stored);
   } else {
-    // Initial sample quotes
     quotes = [
       makeQuote("The best way to get started is to quit talking and begin doing.", "Motivation"),
       makeQuote("Don’t let yesterday take up too much of today.", "Inspiration"),
@@ -112,9 +111,6 @@ function addQuote() {
   newQuoteText.value = "";
   newQuoteCategory.value = "";
   alert("Quote added successfully!");
-
-  // Optionally post new quote to server asynchronously
-  postQuoteToServer(newQuote);
 }
 
 /* --- Import / Export --- */
@@ -205,38 +201,38 @@ function mergeQuotes(localQuotes, serverQuotes) {
   const serverMap = new Map(serverQuotes.map(q => [q.id, q]));
 
   serverQuotes.forEach(serverQ => {
-    const localQIndex = merged.findIndex(q => q.id === serverQ.id);
-    if (localQIndex === -1) {
-      // New quote from server
+    const localQ = merged.find(q => q.id === serverQ.id);
+    if (!localQ) {
       merged.push(serverQ);
-    } else if (serverQ.lastModified > merged[localQIndex].lastModified) {
-      // Server quote is newer, replace local
-      merged[localQIndex] = serverQ;
+    } else if (serverQ.lastModified > localQ.lastModified) {
+      const idx = merged.findIndex(q => q.id === localQ.id);
+      if (idx !== -1) merged[idx] = serverQ;
     }
   });
 
   return merged;
 }
 
-// The main sync function (called manually or periodically)
+/* --- Sync Quotes --- */
 async function syncQuotes() {
-  const serverData = await fetchQuotesFromServer();
-  if (serverData.length === 0) {
-    alert("No data fetched from server.");
-    return;
-  }
+  const fetchedServerQuotes = await fetchQuotesFromServer();
+  if (fetchedServerQuotes.length === 0) return;
 
-  const merged = mergeQuotes(quotes, serverData);
+  const newMergedQuotes = mergeQuotes(quotes, fetchedServerQuotes);
+  const isConflict = JSON.stringify(quotes) !== JSON.stringify(newMergedQuotes);
 
-  const localStr = JSON.stringify(quotes);
-  const mergedStr = JSON.stringify(merged);
-
-  if (localStr !== mergedStr) {
-    conflictQuotes = merged;
+  if (isConflict) {
+    conflictQuotes = newMergedQuotes;
     syncMessage.textContent = "Server has updated quotes. Accept server version or keep local?";
     syncStatus.style.display = "block";
   } else {
-    alert("Quotes are already in sync with server.");
+    quotes = newMergedQuotes;
+    saveQuotes();
+    populateCategories();
+    filterQuotes();
+    syncMessage.textContent = "Quotes synced with server!";
+    syncStatus.style.display = "block";
+    setTimeout(() => { syncStatus.style.display = "none"; }, 4000);
   }
 }
 
@@ -275,18 +271,21 @@ function init() {
 
   // Event listeners
   showQuoteBtn.addEventListener("click", showRandomQuote);
-  addQuoteBtn.addEventListener("click", addQuote);
+  syncQuotesBtn.addEventListener("click", syncQuotes);
+  addQuoteBtn.addEventListener("click", () => {
+    addQuote();
+    postQuoteToServer(quotes[quotes.length - 1]); // fire & forget
+  });
   categoryFilter.addEventListener("change", filterQuotes);
   exportQuotesBtn.addEventListener("click", exportToJsonFile);
   importFileInput.addEventListener("change", importFromJsonFile);
   acceptServerBtn.addEventListener("click", acceptServerVersion);
   keepLocalBtn.addEventListener("click", keepLocalVersion);
-  syncQuotesBtn.addEventListener("click", syncQuotes);
 
   // Initial quote display
   showRandomQuote();
 
-  // Periodic sync every minute
+  // Periodic sync
   if (SERVER_URL && !SERVER_URL.includes("your-mock-api")) {
     syncQuotes(); // initial sync
     setInterval(syncQuotes, SYNC_INTERVAL_MS);
@@ -296,6 +295,8 @@ function init() {
 }
 
 init();
+
+
 
 
 
