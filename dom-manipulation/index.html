@@ -45,7 +45,7 @@
 
     <!-- Quote Display -->
     <div id="quoteDisplay">Click "Show New Quote" to get started</div>
-    <button id="newQuote">Show New Quote</button>
+    <button id="showQuoteBtn">Show New Quote</button>
 
     <!-- Add Quote Form -->
     <div class="form-section">
@@ -55,6 +55,14 @@
         <button id="addQuoteBtn">Add Quote</button>
     </div>
 
+    <!-- JSON Import/Export -->
+    <div class="form-section">
+        <h3>Import / Export Quotes</h3>
+        <button onclick="exportToJsonFile()">Export Quotes</button>
+        <input type="file" id="importFile" accept=".json" onchange="importFromJsonFile(event)" />
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
+
