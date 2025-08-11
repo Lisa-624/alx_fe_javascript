@@ -35,7 +35,16 @@
     </style>
 </head>
 <body>
-    <h1>Dynamic Quote Generator</h1>
+<h1>Dynamic Quote Generator</h1>
+
+    <!-- Sync / Conflict Notification -->
+<div id="syncStatus" style="display:none; padding:12px; margin:10px 0; border-radius:6px; background:#fff7cd; color:#4a3b00;">
+  <span id="syncMessage"></span>
+  <div id="syncActions" style="margin-top:8px;">
+    <button id="acceptServerBtn">Accept Server Version</button>
+    <button id="keepLocalBtn">Keep Local Version</button>
+  </div>
+</div>
 
     <!-- Category Filter -->
     <div>
