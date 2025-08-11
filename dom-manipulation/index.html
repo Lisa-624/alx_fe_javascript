@@ -1,81 +1,95 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic Quote Generator</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-            background: #f5f5f5;
-        }
-        h1 {
-            text-align: center;
-        }
-        #quoteDisplay {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-            margin: 20px 0;
-            font-size: 18px;
-        }
-        select, input, button {
-            margin: 5px;
-            padding: 8px;
-            font-size: 14px;
-        }
-        .form-section {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dynamic Quote Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    h1 {
+      text-align: center;
+    }
+    #quoteDisplay {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      margin: 20px 0;
+      font-size: 18px;
+      min-height: 60px;
+    }
+    select, input, button {
+      margin: 5px;
+      padding: 8px;
+      font-size: 14px;
+    }
+    .form-section {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+    #syncStatus {
+      display: none;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 6px;
+      background: #fff7cd;
+      color: #4a3b00;
+    }
+    #syncActions button {
+      margin-right: 10px;
+    }
+  </style>
 </head>
 <body>
-<h1>Dynamic Quote Generator</h1>
 
-    <!-- Sync / Conflict Notification -->
-<div id="syncStatus" style="display:none; padding:12px; margin:10px 0; border-radius:6px; background:#fff7cd; color:#4a3b00;">
-  <span id="syncMessage"></span>
-  <div id="syncActions" style="margin-top:8px;">
-    <button id="acceptServerBtn">Accept Server Version</button>
-    <button id="keepLocalBtn">Keep Local Version</button>
+  <h1>Dynamic Quote Generator</h1>
+
+  <!-- Sync / Conflict Notification -->
+  <div id="syncStatus">
+    <span id="syncMessage"></span>
+    <div id="syncActions" style="margin-top: 8px;">
+      <button id="acceptServerBtn">Accept Server Version</button>
+      <button id="keepLocalBtn">Keep Local Version</button>
+    </div>
   </div>
-</div>
 
-    <!-- Category Filter -->
-    <div>
-        <label for="categoryFilter">Filter by Category: </label>
-        <select id="categoryFilter" onchange="filterQuotes()">
-            <option value="all">All Categories</option>
-            <!-- Dynamically populated categories -->
-        </select>
-    </div>
+  <!-- Category Filter -->
+  <div>
+    <label for="categoryFilter">Filter by Category: </label>
+    <select id="categoryFilter">
+      <option value="all">All Categories</option>
+      <!-- Dynamically populated -->
+    </select>
+  </div>
 
-    <!-- Quote Display -->
-    <div id="quoteDisplay">Click "Show New Quote" to get started</div>
-    <button id="showQuoteBtn">Show New Quote</button>
+  <!-- Quote Display -->
+  <div id="quoteDisplay">Click "Show New Quote" to get started</div>
+  <button id="showQuoteBtn">Show New Quote</button>
 
-    <!-- Add Quote Form -->
-    <div class="form-section">
-        <h3>Add a New Quote</h3>
-        <input id="newQuoteText" type="text" placeholder="Enter a new quote" />
-        <input id="newQuoteCategory" type="text" placeholder="Enter quote category" />
-        <button id="addQuoteBtn">Add Quote</button>
-    </div>
+  <!-- Add Quote Form -->
+  <div class="form-section">
+    <h3>Add a New Quote</h3>
+    <input id="newQuoteText" type="text" placeholder="Enter a new quote" />
+    <input id="newQuoteCategory" type="text" placeholder="Enter quote category" />
+    <button id="addQuoteBtn">Add Quote</button>
+  </div>
 
-    <!-- JSON Import/Export -->
-    <div class="form-section">
-        <h3>Import / Export Quotes</h3>
-        <button onclick="exportToJsonFile()">Export Quotes</button>
-        <input type="file" id="importFile" accept=".json" onchange="importFromJsonFile(event)" />
-    </div>
+  <!-- JSON Import/Export -->
+  <div class="form-section">
+    <h3>Import / Export Quotes</h3>
+    <button id="exportQuotesBtn">Export Quotes</button>
+    <input type="file" id="importFile" accept=".json" />
+  </div>
 
-    <script src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
+
 
 
